@@ -1,3 +1,4 @@
+import argparse
 import tensorflow as tf
 import tensorflow.keras.backend as K
 from tensorflow.keras.layers import Input,Conv2D, Conv2DTranspose, Dense, Reshape, \
@@ -161,7 +162,14 @@ def FullModel(input_shape,latent_dim,base_dim=32,emb_dim=512, kernel_size=3,num_
 # main
 ####################################################################
 
-dataset = 'celeba' #'mnist','cifar10','celeba'
+parser = argparse.ArgumentParser()
+parser.add_argument('--dataset', type=str, default='mnist')
+parser.add_argument('--epochs', type=int, default=1)
+parser.add_argument('--load_weights', type=str, default=False)
+
+opt_parser = parser.parse_args()
+
+dataset = opt_parser.dataset
 
 if dataset == 'celeba':
   latent_dim = 150
@@ -191,12 +199,14 @@ initial_lr = .0001
 optimizer = Adam(learning_rate=initial_lr)
 
 vae.compile(optimizer=optimizer,loss=None,metrics=['mse'])
-epochs = 0
-load_w = True
+epochs = parser.epochs
+load_w = bool(opt_parser.load_weights)
 
 weights_filename = 'my_weights' #visit    for pre-trained weights
 
 if load_w:
+    if os.path.isdir('weights') == False:
+      os.mkdir('weights')
     vae.load_weights('weights/'+weights_filename)
     xin = x_train[:10000]
     #estimate current mse for intializing gamma
